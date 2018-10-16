@@ -1,0 +1,416 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>simple_email.main &mdash; simple_email 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> simple_email
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../classes.html">Classes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../_source/simple_email.Email.html">simple_email.Email</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../_source/simple_email.EmailClient.html">simple_email.EmailClient</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../functions.html">Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../_source/simple_email.main.parse_email_addr.html">simple_email.main.parse_email_addr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../_source/simple_email.main.path_to_bytes.html">simple_email.main.path_to_bytes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../_source/simple_email.main.path_to_attachment_components.html">simple_email.main.path_to_attachment_components</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">simple_email</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>simple_email.main</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for simple_email.main</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Easy API for sending e-mails based on smtplib and email.</span>
+
+<span class="sd">Example:</span>
+
+<span class="sd">    &gt;&gt;&gt; from simple_email import Email, EmailClient</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; # Note: EMAIL and EMAIL_AUTH refer to hypothetical environment variables</span>
+<span class="sd">    &gt;&gt;&gt; # NEVER hard-code your auth in your code!</span>
+<span class="sd">    &gt;&gt;&gt; email_client = EmailClient(login=EMAIL, password=EMAIL_AUTH,</span>
+<span class="sd">                                   host=&#39;smtp.office365.com&#39;, port=587)</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; msg = Email(from_addr=email_client.login,</span>
+<span class="sd">                    to_addr=&quot;an_email_address@domain.com&quot;,</span>
+<span class="sd">                    subject=&quot;Sample Subject Line&quot;,</span>
+<span class="sd">                    body=&quot;Here&#39;s the body of the e-mail.&quot;,</span>
+<span class="sd">                    cc=&quot;another_email_address@domain.com&quot;)</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; msg.add_attachment(b&quot;Test bytes&quot;, &quot;test_file.csv&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; msg.add_attachment_from_path(path=&quot;/some/path/file.ext&quot;)</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; email_client.send(msg)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">smtplib</span>
+<span class="kn">from</span> <span class="nn">email.mime.multipart</span> <span class="k">import</span> <span class="n">MIMEMultipart</span>
+<span class="kn">from</span> <span class="nn">email.mime.text</span> <span class="k">import</span> <span class="n">MIMEText</span>
+<span class="kn">from</span> <span class="nn">email.mime.base</span> <span class="k">import</span> <span class="n">MIMEBase</span>
+<span class="kn">from</span> <span class="nn">email.encoders</span> <span class="k">import</span> <span class="n">encode_base64</span>
+<span class="kn">from</span> <span class="nn">mimetypes</span> <span class="k">import</span> <span class="n">guess_type</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="k">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
+
+<div class="viewcode-block" id="parse_email_addr"><a class="viewcode-back" href="../../_source/simple_email.main.parse_email_addr.html#simple_email.parse_email_addr">[docs]</a><span class="k">def</span> <span class="nf">parse_email_addr</span><span class="p">(</span><span class="n">email</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Strips surrounding angle brackets from an e-mail address.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;&lt;&#39;</span> <span class="ow">in</span> <span class="n">email</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">email</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;&lt;&#39;</span><span class="p">)</span>
+        <span class="n">email</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;&gt;&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">email</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="path_to_bytes"><a class="viewcode-back" href="../../_source/simple_email.main.path_to_bytes.html#simple_email.path_to_bytes">[docs]</a><span class="k">def</span> <span class="nf">path_to_bytes</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Helper function to get a bytes object from the contents of a file on disk.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        path: Path to a file to import as a bytes object.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        File contents loaded from path as bytes in memory.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="path_to_attachment_components"><a class="viewcode-back" href="../../_source/simple_email.main.path_to_attachment_components.html#simple_email.path_to_attachment_components">[docs]</a><span class="k">def</span> <span class="nf">path_to_attachment_components</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Helper function to get a file&#39;s bytes and metadata for use with Email.add_attachment.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        path: Path to a file to import as a bytes object.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tuple of args needed to create an attachment to an Email.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ctype</span><span class="p">,</span> <span class="n">encoding</span> <span class="o">=</span> <span class="n">guess_type</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">maintype</span><span class="p">,</span> <span class="n">subtype</span> <span class="o">=</span> <span class="n">ctype</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">path_to_bytes</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">project</span><span class="p">)</span>
+    <span class="n">file_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">maintype</span><span class="p">,</span> <span class="n">subtype</span></div>
+
+
+<div class="viewcode-block" id="EmailClient"><a class="viewcode-back" href="../../_source/simple_email.EmailClient.html#simple_email.EmailClient">[docs]</a><span class="k">class</span> <span class="nc">EmailClient</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Email client that will be used to send  and receive e-mails.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; # `config` below refers to a hypothetical env file.</span>
+<span class="sd">        &gt;&gt;&gt; email_client = EmailClient(login=config.EMAIL, password=config.EMAIL_AUTH,</span>
+<span class="sd">                                       host=&#39;smtp.office365.com&#39;, port=587)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="EmailClient.__init__"><a class="viewcode-back" href="../../_source/simple_email.EmailClient.html#simple_email.EmailClient.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">login</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">password</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">host</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Instatiate the credentials for the e-mail client without authenticating.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            login: The e-mail address used to log in with your e-mail provider.</span>
+<span class="sd">                   E.g. &#39;an_email_address@domain.com&#39;</span>
+<span class="sd">            password: The password associated with the login. For security, it is strongly recommended</span>
+<span class="sd">                      that this parameter be fed from an environment variable and NOT in plain text.</span>
+<span class="sd">            host: The smtp host name. E.g. &#39;smtp.office365.com&#39; for Outlook365.</span>
+<span class="sd">            port: host&#39;s port. E.g. 587 for Outlook365.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">login</span> <span class="o">=</span> <span class="n">login</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="n">password</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">host</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span></div>
+
+    <span class="k">def</span> <span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">from_addr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">to_addrs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mail_options</span><span class="o">=</span><span class="p">(),</span> <span class="n">rcpt_options</span><span class="o">=</span><span class="p">()):</span>
+        <span class="sd">&quot;&quot;&quot;Send an Email object as an e-mail.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            msg: Ideally an Email object. May also be a string of ASCII characters or a byte string.</span>
+<span class="sd">            from_addr: An RFC 822 from-address string.</span>
+<span class="sd">            to_addrs: A list of RFC 822 to-address strings.</span>
+<span class="sd">            mail_options: A list of ESMTP options (such as 8bitmime) to be used in MAIL FROM commands.</span>
+<span class="sd">            rcpt_options: ESMTP options (such as DSN commands) that should be used with all RCPT commands.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            See https://docs.python.org/3/library/smtplib.html#smtplib.SMTP.sendmail</span>
+<span class="sd">            for more information on acceptable args.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A dictionary, with one entry for each recipient that was refused.</span>
+<span class="sd">            Each entry contains a tuple of the SMTP error code and the accompanying error message sent by the server.</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; email_client.send(msg)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">smtplib</span><span class="o">.</span><span class="n">SMTP</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span> <span class="k">as</span> <span class="n">server</span><span class="p">:</span>
+            <span class="n">server</span><span class="o">.</span><span class="n">starttls</span><span class="p">()</span>
+            <span class="n">server</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">login</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">password</span><span class="p">)</span>
+
+            <span class="n">from_addr</span> <span class="o">=</span> <span class="n">from_addr</span> <span class="k">if</span> <span class="n">from_addr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">msg</span><span class="o">.</span><span class="n">email</span><span class="p">[</span><span class="s1">&#39;From&#39;</span><span class="p">]</span>
+            <span class="n">to_emails</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">msg</span><span class="o">.</span><span class="n">email</span><span class="p">[</span><span class="s1">&#39;To&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">msg</span><span class="o">.</span><span class="n">email</span><span class="p">[</span><span class="s1">&#39;Cc&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)))</span>
+            <span class="n">to_addrs</span> <span class="o">=</span> <span class="p">[</span><span class="n">parse_email_addr</span><span class="p">(</span><span class="n">complete_email</span><span class="p">)</span> <span class="k">for</span> <span class="n">complete_email</span> <span class="ow">in</span> <span class="n">to_emails</span><span class="p">]</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">server</span><span class="o">.</span><span class="n">sendmail</span><span class="p">(</span><span class="n">from_addr</span><span class="o">=</span><span class="n">from_addr</span><span class="p">,</span> <span class="n">to_addrs</span><span class="o">=</span><span class="n">to_addrs</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="n">msg</span><span class="p">,</span>
+                                   <span class="n">mail_options</span><span class="o">=</span><span class="n">mail_options</span><span class="p">,</span> <span class="n">rcpt_options</span><span class="o">=</span><span class="n">rcpt_options</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Email"><a class="viewcode-back" href="../../_source/simple_email.Email.html#simple_email.Email">[docs]</a><span class="k">class</span> <span class="nc">Email</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Formatted e-mail object to be used with EmailClient.send.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; msg = Email(from_addr=email_client.login,</span>
+<span class="sd">                        to_addr=&quot;an_email_address@domain.com&quot;,</span>
+<span class="sd">                        subject=&quot;Sample Subject Line&quot;,</span>
+<span class="sd">                        body=&quot;Here&#39;s the body of the e-mail.&quot;,</span>
+<span class="sd">                        cc=&quot;another_email_address@domain.com&quot;)</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; msg.add_attachment(b&quot;Test bytes&quot;, &quot;test_file.csv&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; msg.add_attachment_from_path(path=&quot;/some/path/file.ext&quot;)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Email.__init__"><a class="viewcode-back" href="../../_source/simple_email.Email.html#simple_email.Email.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_addr</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">to_addr</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">],</span> <span class="n">subject</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">body</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                 <span class="n">body_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;plain&#39;</span><span class="p">,</span> <span class="n">cc</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">body_encoding</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;us-ascii&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            from_addr: E-mail address the Email should come from.</span>
+<span class="sd">            to_addr: E-mail address(es) that will be on the To line of the Email; included in Email recipients.</span>
+<span class="sd">            subject: Email&#39;s subject line.</span>
+<span class="sd">            body: Text in the body of the e-mail.</span>
+<span class="sd">            body_type: Sets the type of text in the body. Defaults to &#39;plain&#39;, but can be &#39;plain&#39; or &#39;html&#39;.</span>
+<span class="sd">            cc: E-mail address(es) that will be on the Cc line of the Email; included in Email recipients.</span>
+<span class="sd">            body_encoding: The encoding of the text in the body. Defaults to &#39;us-ascii&#39;, but can be &#39;utf-8&#39;, etc.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">email</span> <span class="o">=</span> <span class="n">MIMEMultipart</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="p">[</span><span class="s1">&#39;Subject&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">subject</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="p">[</span><span class="s1">&#39;From&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">from_addr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="p">[</span><span class="s1">&#39;To&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">to_addr</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">to_addr</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">to_addr</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="p">[</span><span class="s1">&#39;Cc&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cc</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cc</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cc</span><span class="p">)</span>
+
+        <span class="n">text</span> <span class="o">=</span> <span class="n">MIMEText</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">body_type</span><span class="p">,</span> <span class="n">body_encoding</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="n">text</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">add_attachment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">maintype</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;application&#39;</span><span class="p">,</span> <span class="n">subtype</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;octet-stream&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add attachment from bytes object in memory.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data: Desired attachment data as a bytes object.</span>
+<span class="sd">            file_name: Name of the attached file that recipients will see.</span>
+<span class="sd">            maintype: Mimetype maintype.</span>
+<span class="sd">            subtype: Mimetype subtype.</span>
+
+<span class="sd">        See Also:</span>
+<span class="sd">            add_attachment_from_path</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">attachment</span> <span class="o">=</span> <span class="n">MIMEBase</span><span class="p">(</span><span class="n">maintype</span><span class="p">,</span> <span class="n">subtype</span><span class="p">)</span>
+        <span class="n">attachment</span><span class="o">.</span><span class="n">set_payload</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">encode_base64</span><span class="p">(</span><span class="n">attachment</span><span class="p">)</span>
+        <span class="n">attachment</span><span class="o">.</span><span class="n">add_header</span><span class="p">(</span><span class="s1">&#39;Content-Disposition&#39;</span><span class="p">,</span> <span class="s1">&#39;attachment&#39;</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">file_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="n">attachment</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">add_attachment_from_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add attachment from path&#39;s contents.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path: Path to a file to import as a bytes object.</span>
+
+<span class="sd">        See Also:</span>
+<span class="sd">            add_attachment</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">components</span> <span class="o">=</span> <span class="n">path_to_attachment_components</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_attachment</span><span class="p">(</span><span class="o">*</span><span class="n">components</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">as_string</span><span class="p">()</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Zax Rosenberg
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

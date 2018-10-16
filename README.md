@@ -3,7 +3,7 @@ Easy API for sending e-mails based on Python's built-in smtplib and email module
 ## Example Usage  
 
 ```python
-from email_for_humans import Email, EmailClient  
+from simple_email import Email, EmailClient  
 
 
 # Note: EMAIL and EMAIL_AUTH refer to hypothetical environment variables

@@ -1,28 +1,24 @@
 """Easy API for sending e-mails based on smtplib and email.
 
 Example:
-    from email_with_python import Email, EmailClient
 
-    # Note: EMAIL and EMAIL_AUTH refer to hypothetical environment variables
-    # NEVER hard-code your auth in your code!
-    email_client = EmailClient(login=EMAIL, password=EMAIL_AUTH,
-                               host='smtp.office365.com', port=587)
-
-    msg = Email(from_addr=email_client.login,
-                to_addr="an_email_address@domain.com",
-                subject="Sample Subject Line",
-                body="Here's the body of the e-mail.",
-                cc="another_email_address@domain.com")
-
-    # Note - Multiple recipients are possible using a list or a string with recipients separated by commas
-    # E.g. change the to_addr param in the Email object above to:
-    # "an_email_address@domain.com, another_email_address@domain.com"
-    # Use the same syntax for multiple cc's
-
-    msg.add_attachment(b"Test bytes", "test_file.csv")
-    msg.add_attachment_from_path(path="/some/path/file.ext")
-
-    email_client.send(msg)
+    >>> from simple_email import Email, EmailClient
+    >>>
+    >>> # Note: EMAIL and EMAIL_AUTH refer to hypothetical environment variables
+    >>> # NEVER hard-code your auth in your code!
+    >>> email_client = EmailClient(login=EMAIL, password=EMAIL_AUTH,
+                                   host='smtp.office365.com', port=587)
+    >>>
+    >>> msg = Email(from_addr=email_client.login,
+                    to_addr="an_email_address@domain.com",
+                    subject="Sample Subject Line",
+                    body="Here's the body of the e-mail.",
+                    cc="another_email_address@domain.com")
+    >>>
+    >>> msg.add_attachment(b"Test bytes", "test_file.csv")
+    >>> msg.add_attachment_from_path(path="/some/path/file.ext")
+    >>>
+    >>> email_client.send(msg)
 
 """
 import smtplib
@@ -35,7 +31,8 @@ from pathlib import Path
 from typing import List, Tuple, Union
 
 
-def get_email(email):
+def parse_email_addr(email: str) -> str:
+    """Strips surrounding angle brackets from an e-mail address."""
     if '<' in email:
         data = email.split('<')
         email = data[1].split('>')[0].strip()
@@ -80,9 +77,10 @@ class EmailClient:
     """Email client that will be used to send  and receive e-mails.
 
     Example:
-        # Note: config refers to a hypothetical env file
+        >>> # `config` below refers to a hypothetical env file.
         >>> email_client = EmailClient(login=config.EMAIL, password=config.EMAIL_AUTH,
                                        host='smtp.office365.com', port=587)
+
     """
 
     def __init__(self, login: str, password: str, host: str, port: int):
@@ -91,11 +89,11 @@ class EmailClient:
         Args:
             login: The e-mail address used to log in with your e-mail provider.
                    E.g. 'an_email_address@domain.com'
-            password: The password associated with the login.
-                      Note: This should be fed from an environment variable
-                            and NOT in plain text.
+            password: The password associated with the login. For security, it is strongly recommended
+                      that this parameter be fed from an environment variable and NOT in plain text.
             host: The smtp host name. E.g. 'smtp.office365.com' for Outlook365.
             port: host's port. E.g. 587 for Outlook365.
+
         """
         self.login = login
         self.password = password
@@ -106,8 +104,15 @@ class EmailClient:
         """Send an Email object as an e-mail.
 
         Args:
-            See https://docs.python.org/3/library/smtplib.html#smtplib.SMTP.send_message
-            for explanations, options, and behavior.
+            msg: Ideally an Email object. May also be a string of ASCII characters or a byte string.
+            from_addr: An RFC 822 from-address string.
+            to_addrs: A list of RFC 822 to-address strings.
+            mail_options: A list of ESMTP options (such as 8bitmime) to be used in MAIL FROM commands.
+            rcpt_options: ESMTP options (such as DSN commands) that should be used with all RCPT commands.
+
+        Note:
+            See https://docs.python.org/3/library/smtplib.html#smtplib.SMTP.sendmail
+            for more information on acceptable args.
 
         Returns:
             A dictionary, with one entry for each recipient that was refused.
@@ -123,7 +128,7 @@ class EmailClient:
 
             from_addr = from_addr if from_addr is not None else msg.email['From']
             to_emails = list(filter(None, msg.email['To'].split(',') + msg.email['Cc'].split(',')))
-            to_addrs = [get_email(complete_email) for complete_email in to_emails]
+            to_addrs = [parse_email_addr(complete_email) for complete_email in to_emails]
             msg = str(msg)
 
             return server.sendmail(from_addr=from_addr, to_addrs=to_addrs, msg=msg,
@@ -139,7 +144,7 @@ class Email:
                         subject="Sample Subject Line",
                         body="Here's the body of the e-mail.",
                         cc="another_email_address@domain.com")
-
+        >>>
         >>> msg.add_attachment(b"Test bytes", "test_file.csv")
         >>> msg.add_attachment_from_path(path="/some/path/file.ext")
 

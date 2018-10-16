@@ -3,6 +3,7 @@
 
 """The setup script."""
 from setuptools import setup, find_packages
+from sphinx.setup_command import BuildDoc
 
 
 with open("README.md") as readme_file:
@@ -16,12 +17,18 @@ install_requires = []
 
 tests_require = ["pytest"]
 
+cmdclass = {'build_sphinx': BuildDoc}
+
+name = "simple_email"
+copyright = "2018, Test"
+version = '0.1'
+release = '0.1.0'
 setup(
-    name="email_for_humans",
-    version='0.1.0',
+    name=name,
+    version=release,
     description="Easy e-mailing with pure python; wraps the standard library's smtp and email modules.",
     long_description=readme,
-    url="https://github.com/zaxr/email_for_humans",
+    url="https://github.com/zaxr/simple_email",
     author="Zax Rosenberg",
     author_email="zaxr@protonmail.com",
     classifiers=["Development Status :: 3 - Alpha",
@@ -34,4 +41,11 @@ setup(
     install_requires=install_requires,
     tests_require=tests_require,
     test_suite="tests",
+    cmdclass=cmdclass,
+    # these are optional and override conf.py settings
+    command_options={'build_sphinx': {"project": ("setup.py", name),
+                                      "copyright": ("setup.py", copyright),
+                                      "version": ("setup.py", version),
+                                      "release": ("setup.py", release),
+                                      "source_dir": ("setup.py", "docs")}}
 )
